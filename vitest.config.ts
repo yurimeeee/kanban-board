@@ -21,6 +21,7 @@ export default mergeConfig(
         "@styles": path.resolve(__dirname, "./src/styles"),
         "@utils": path.resolve(__dirname, "./src/utils"),
         "@types": path.resolve(__dirname, "./src/types"),
+        "@pages": path.resolve(__dirname, "./src/pages"),
         "@": path.resolve(__dirname, "./src"),
       },
     },

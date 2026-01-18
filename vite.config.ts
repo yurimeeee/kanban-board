@@ -1,9 +1,11 @@
 import { defineConfig } from "vite";
 import path from "path";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     react({
       jsxImportSource: "@emotion/react",
       babel: { plugins: ["@emotion/babel-plugin"] },
@@ -18,6 +20,7 @@ export default defineConfig({
       "@styles": path.resolve(__dirname, "./src/styles"),
       "@utils": path.resolve(__dirname, "./src/utils"),
       "@types": path.resolve(__dirname, "./src/types"),
+      "@pages": path.resolve(__dirname, "./src/pages"),
       "@": path.resolve(__dirname, "./src"),
     },
   },

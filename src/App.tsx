@@ -1,16 +1,31 @@
-import { Button } from '@components/ui/button';
-import styled from '@emotion/styled';
+// src/App.tsx
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
-const Wrapper = styled.div`
-  min-height: 100vh;
-`;
+// import { AboutPage } from '@/pages/AboutPage';
+import { AppLayout } from '@components/layout/AppLayout';
+import { HomePage } from '@pages/home/HomePage';
+
+// import { HomePage } from '@/pages/HomePage';
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <AppLayout />, // 부모 레이아웃
+    children: [
+      {
+        path: '', // "/" 경로일 때
+        element: <HomePage />,
+      },
+      // {
+      //   path: 'about', // "/about" 경로일 때
+      //   element: <AboutPage />,
+      // },
+    ],
+  },
+]);
 
 function App() {
-  return (
-    <Wrapper className="flex items-center justify-center">
-      <Button>Template Ready</Button>
-    </Wrapper>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
