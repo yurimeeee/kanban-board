@@ -1,9 +1,9 @@
-import { Github, Menu, Moon, Sun } from 'lucide-react';
+import { Github, Menu } from 'lucide-react';
 
 import { Button } from '@components/ui/button';
 import { Link } from 'react-router-dom';
+import ThemeToggleButton from '@components/common/ThemeToggleButton';
 import styled from '@emotion/styled';
-import { useThemeMode } from '@styles/ThemeContext';
 
 const Nav = styled.header`
   position: sticky;
@@ -24,36 +24,6 @@ const NavContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
 `;
-const ToggleButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-
-  /* Emotion 테마 변수 활용 (Tailwind 변수와 연동됨) */
-  background-color: var(--color-primary);
-  color: var(--color-primary-foreground);
-  border: none;
-
-  transition: all 0.2s ease-in-out;
-
-  &:hover {
-    opacity: 0.9;
-    transform: scale(1.02);
-  }
-`;
-
-export function ThemeToggleButton() {
-  const { mode, toggleTheme } = useThemeMode();
-
-  return (
-    <Button variant="ghost" size="icon" onClick={toggleTheme}>
-      {mode === 'light' ? <Moon size={20} /> : <Sun size={20} color="#ffcf40" />}
-    </Button>
-  );
-}
 
 export function Header() {
   return (
@@ -78,16 +48,7 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon">
-            <Github className="h-5 w-5" />
-          </Button>
-
           <ThemeToggleButton />
-          <Button variant="ghost" size="icon">
-            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span className="sr-only">Toggle theme</span>
-          </Button>
           <Button variant="default" size="sm" className="hidden md:flex">
             Login
           </Button>

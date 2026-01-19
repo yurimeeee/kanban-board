@@ -43,6 +43,8 @@ const FeatureCard = styled.div`
 export function HomePage() {
   return (
     <div className="flex-1">
+      <KanbanBoard />
+
       {/* Hero 영역 */}
       <HeroSection>
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight">
@@ -84,8 +86,6 @@ export function HomePage() {
           <p className="text-muted-foreground text-sm">Vitest와 Testing Library로 작성된 테스트 환경을 제공합니다.</p>
         </FeatureCard>
       </FeatureGrid>
-
-      <KanbanBoard />
     </div>
   );
 }
