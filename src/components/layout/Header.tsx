@@ -2,8 +2,10 @@ import { Github, Menu } from 'lucide-react';
 
 import { Button } from '@components/ui/button';
 import { Link } from 'react-router-dom';
+import { LoginModal } from '@components/feature/home/login/LoginModal';
 import ThemeToggleButton from '@components/common/ThemeToggleButton';
 import styled from '@emotion/styled';
+import { useState } from 'react';
 
 const Nav = styled.header`
   position: sticky;
@@ -26,6 +28,7 @@ const NavContainer = styled.div`
 `;
 
 export function Header() {
+  const [loginModal, setLoginModal] = useState<boolean>(false);
   return (
     <Nav>
       <NavContainer>
@@ -49,11 +52,12 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           <ThemeToggleButton />
-          <Button variant="default" size="sm" className="hidden md:flex">
+          <Button variant="default" size="sm" className="hidden md:flex" onClick={() => setLoginModal(true)}>
             Login
           </Button>
         </div>
       </NavContainer>
+      <LoginModal isOpen={loginModal} onClose={() => setLoginModal(false)} />
     </Nav>
   );
 }

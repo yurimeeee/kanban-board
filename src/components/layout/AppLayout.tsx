@@ -1,5 +1,6 @@
 import { Header } from '@components/layout/Header';
 import { Outlet } from 'react-router-dom';
+import { Toaster } from '@components/ui/sonner';
 import styled from '@emotion/styled';
 
 const Main = styled.main`
@@ -15,6 +16,7 @@ export function AppLayout() {
         <Main>
           <Outlet />
         </Main>
+        <Toaster />
       </div>
     </div>
   );

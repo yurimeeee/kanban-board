@@ -9,7 +9,7 @@ const Wrap = styled.div`
   background: white;
   /* height: ; */
 `;
-const KanbanBoard = () => {
+export function KanbanBoard() {
   return (
     <Wrap>
       <div>
@@ -27,6 +27,4 @@ const KanbanBoard = () => {
       </div>
     </Wrap>
   );
-};
-
-export default KanbanBoard;
+}

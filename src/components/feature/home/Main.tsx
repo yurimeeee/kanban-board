@@ -1,9 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 
-import KanbanBoard from '@components/feature/home/KanbanBoard';
-import React from 'react';
+import { KanbanBoard } from '@components/feature/home/KanbanBoard';
 
-const Main = () => {
+export function Main() {
   return (
     <div>
       <Tabs defaultValue="account" className="w-[400px]">
@@ -20,6 +19,4 @@ const Main = () => {
       </Tabs>
     </div>
   );
-};
-
-export default Main;
+}

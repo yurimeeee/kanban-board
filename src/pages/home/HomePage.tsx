@@ -1,7 +1,7 @@
 import { ArrowRight, Code2, Rocket, ShieldCheck } from 'lucide-react';
 
 import { Button } from '@components/ui/button';
-import KanbanBoard from '@components/feature/home/KanbanBoard';
+import { KanbanBoard } from '@components/feature/home/KanbanBoard';
 // src/pages/HomePage.tsx
 import styled from '@emotion/styled';
 
