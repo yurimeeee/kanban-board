@@ -1,7 +1,11 @@
 import { Header } from '@components/layout/Header';
 import { Outlet } from 'react-router-dom';
 import { Toaster } from '@components/ui/sonner';
+import { auth } from '@lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import styled from '@emotion/styled';
+import { useEffect } from 'react';
+import { useUserStore } from '@store/userSlice';
 
 const Main = styled.main`
   flex: 1;

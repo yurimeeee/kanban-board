@@ -8,6 +8,7 @@ import { Separator } from '@components/ui/separator';
 import { auth } from '@lib/firebase';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { useUserStore } from '@store/userSlice';
 
 export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   // 로그인 / 회원가입 모드 전환 상태
@@ -15,13 +16,31 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
+  const setUser = useUserStore((state) => state.setUser);
   // 구글 로그인
+  // const handleGoogleSignIn = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     const provider = new GoogleAuthProvider();
+  //     await signInWithPopup(auth, provider);
+  //     toast.success('구글 계정으로 로그인되었습니다.');
+  //     onClose();
+  //   } catch (err: any) {
+  //     toast.error('구글 로그인에 실패했습니다.');
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+
+      // 1. Zustand 스토어에 유저 정보 저장
+      setUser(result.user);
+
       toast.success('구글 계정으로 로그인되었습니다.');
       onClose();
     } catch (err: any) {

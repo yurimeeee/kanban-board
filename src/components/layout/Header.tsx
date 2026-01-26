@@ -1,11 +1,14 @@
 import { Github, Menu } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@components/ui/button';
 import { Link } from 'react-router-dom';
 import { LoginModal } from '@components/feature/home/login/LoginModal';
 import ThemeToggleButton from '@components/common/ThemeToggleButton';
+import { auth } from '@lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import styled from '@emotion/styled';
-import { useState } from 'react';
+import { useUserStore } from '@store/userSlice';
 
 const Nav = styled.header`
   position: sticky;
@@ -29,6 +32,24 @@ const NavContainer = styled.div`
 
 export function Header() {
   const [loginModal, setLoginModal] = useState<boolean>(false);
+  const user = useUserStore((state) => state.user);
+  console.log(user);
+
+  const setUser = useUserStore((state) => state.setUser);
+  const clearUser = useUserStore((state) => state.clearUser);
+
+  useEffect(() => {
+    // 파이어베이스 인증 상태 감시 (구독)
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user); // 로그인된 유저가 있으면 스토어 저장
+      } else {
+        clearUser(); // 없으면 스토어 비움
+      }
+    });
+
+    return () => unsubscribe(); // 언마운트 시 구독 해제
+  }, [setUser, clearUser]);
   return (
     <Nav>
       <NavContainer>
@@ -52,12 +73,17 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           <ThemeToggleButton />
-          <Button variant="default" size="sm" className="hidden md:flex" onClick={() => setLoginModal(true)}>
-            Login
-          </Button>
+          {user ? (
+            user?.displayName
+          ) : (
+            <Button variant="default" size="sm" className="hidden md:flex" onClick={() => setLoginModal(true)}>
+              Login
+            </Button>
+          )}
         </div>
       </NavContainer>
       <LoginModal isOpen={loginModal} onClose={() => setLoginModal(false)} />
+      <TodoCreateModal isOpen={loginModal} onClose={() => setLoginModal(false)} />
     </Nav>
   );
 }
