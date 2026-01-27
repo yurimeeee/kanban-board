@@ -5,6 +5,7 @@ import { Button } from '@components/ui/button';
 import { Link } from 'react-router-dom';
 import { LoginModal } from '@components/feature/home/login/LoginModal';
 import ThemeToggleButton from '@components/common/ThemeToggleButton';
+import { TodoCreateModal } from '@components/feature/todo/TodoCreateModal';
 import { auth } from '@lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import styled from '@emotion/styled';
@@ -32,6 +33,7 @@ const NavContainer = styled.div`
 
 export function Header() {
   const [loginModal, setLoginModal] = useState<boolean>(false);
+  const [todoCreateModal, setTodoCreateModal] = useState<boolean>(false);
   const user = useUserStore((state) => state.user);
   console.log(user);
 
@@ -70,8 +72,10 @@ export function Header() {
             About
           </Link>
         </nav>
-
         <div className="flex items-center gap-2">
+          <Button variant="default" size="sm" className="hidden md:flex" onClick={() => setTodoCreateModal(true)}>
+            New Tesk
+          </Button>
           <ThemeToggleButton />
           {user ? (
             user?.displayName
@@ -83,7 +87,7 @@ export function Header() {
         </div>
       </NavContainer>
       <LoginModal isOpen={loginModal} onClose={() => setLoginModal(false)} />
-      <TodoCreateModal isOpen={loginModal} onClose={() => setLoginModal(false)} />
+      <TodoCreateModal isOpen={todoCreateModal} onClose={() => setTodoCreateModal(false)} />
     </Nav>
   );
 }

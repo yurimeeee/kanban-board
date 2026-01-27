@@ -20,7 +20,7 @@ export default mergeConfig(
         "@hooks": path.resolve(__dirname, "./src/hooks"),
         "@styles": path.resolve(__dirname, "./src/styles"),
         "@utils": path.resolve(__dirname, "./src/utils"),
-        "@types": path.resolve(__dirname, "./src/types"),
+        "@type": path.resolve(__dirname, "./src/type"),
         "@pages": path.resolve(__dirname, "./src/pages"),
         "@store": path.resolve(__dirname, "./src/store"),
         "@": path.resolve(__dirname, "./src"),
