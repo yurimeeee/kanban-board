@@ -1,5 +1,5 @@
 export type Priority = 'low' | 'medium' | 'high';
-export type TodoStatus = 'todo' | 'in-progress' | 'done';
+export type TaskStatus = 'todo' | 'in-progress' | 'done';
 
 export interface Todo {
   id: string;
@@ -16,7 +16,7 @@ export interface Todo {
   endTime: string;   // "18:00"
 
   // 메타데이터
-  status: TodoStatus;
+  status: TaskStatus;
   createdAt: number;
   updatedAt: number;
 }
