@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Filter, LayoutGrid, Calendar, Table, Plus, Settings, Search, MoreHorizontal } from 'lucide-react';
+import { DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, useDroppable, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useTasks } from '@hooks/useTasks';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs';
 import { Button } from '@components/ui/button';
@@ -9,7 +12,7 @@ import { TableView } from '@components/feature/table/TableView';
 import { TaskCreateModal } from '@components/feature/task/TaskCreateModal';
 import { KanbanCard } from '@components/feature/kanban/KanbanCard';
 import { COLUMN_CONFIG } from '@type/kanban';
-import type { TaskItem } from '@type/task';
+import type { TaskItem, TaskStatus } from '@type/task';
 
 export function TaskDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,9 +54,7 @@ export function TaskDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Project Board</h1>
-                <p className="text-sm text-gray-500 mt-1">
-                  총 {taskList.length}개의 태스크
-                </p>
+                <p className="text-sm text-gray-500 mt-1">총 {taskList.length}개의 태스크</p>
               </div>
 
               <div className="flex items-center gap-4">
@@ -73,7 +74,6 @@ export function TaskDashboard() {
                   </TabsTrigger>
                 </TabsList>
 
-                {/* Add Task 버튼 */}
                 <Button className="gap-2" onClick={handleAddTask}>
                   <Plus className="w-4 h-4" />
                   Add Task
@@ -83,7 +83,7 @@ export function TaskDashboard() {
           </div>
         </div>
 
-        {/* 컨텐츠 영역 */}
+        {/* 컨텐츠 */}
         <div className="max-w-[1400px] mx-auto">
           {/* 칸반 뷰 */}
           <TabsContent value="kanban" className="mt-0">
@@ -102,33 +102,108 @@ export function TaskDashboard() {
         </div>
       </Tabs>
 
-      {/* 태스크 생성/수정 모달 */}
-      <TaskCreateModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        editTask={editTask}
-      />
+      <TaskCreateModal isOpen={isModalOpen} onClose={handleCloseModal} editTask={editTask} />
     </div>
   );
 }
 
-// 칸반보드 내부 컨텐츠 (헤더 제외)
+// 드래그
+function DraggableCard({ task, onEdit, onDelete }: { task: TaskItem; onEdit: (task: TaskItem) => void; onDelete: (taskId: string) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <KanbanCard task={task} onEdit={onEdit} onDelete={onDelete} />
+    </div>
+  );
+}
+
+// 드롭
+function DroppableColumn({
+  status,
+  tasks,
+  onAddTask,
+  onEditTask,
+  onDeleteTask,
+}: {
+  status: TaskStatus;
+  tasks: TaskItem[];
+  onAddTask: (status: TaskStatus) => void;
+  onEditTask: (task: TaskItem) => void;
+  onDeleteTask: (taskId: string) => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: status });
+  const config = COLUMN_CONFIG[status];
+
+  return (
+    <div className={`flex flex-col bg-gray-100 rounded-xl min-w-[300px] w-[300px] transition-colors ${isOver ? 'bg-gray-200 ring-2 ring-primary ring-opacity-50' : ''}`}>
+      {/* 컬럼 헤더 */}
+      <div className="flex items-center justify-between p-4 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: config.color }} />
+          <h2 className="font-semibold text-gray-800">{config.title}</h2>
+          <span className="ml-1 px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded-full font-medium">{tasks.length}</span>
+        </div>
+        <button className="p-1 hover:bg-gray-200 rounded">
+          <MoreHorizontal className="w-4 h-4 text-gray-500" />
+        </button>
+      </div>
+
+      {/* 카드 목록 */}
+      <div ref={setNodeRef} className="flex-1 p-2 space-y-3 overflow-y-auto max-h-[calc(100vh-350px)] min-h-[100px]">
+        <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+          {tasks.map((task) => (
+            <DraggableCard key={task.id} task={task} onEdit={onEditTask} onDelete={onDeleteTask} />
+          ))}
+        </SortableContext>
+      </div>
+
+      <div className="p-3 pt-1">
+        <Button variant="ghost" className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-gray-200" onClick={() => onAddTask(status)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add a task
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// 칸반보드 내부 컨텐츠
 function KanbanBoardContent({ onEditTask }: { onEditTask: (task: TaskItem) => void }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editTask, setEditTask] = useState<TaskItem | null>(null);
-  const [defaultStatus, setDefaultStatus] = useState<'todo' | 'in-progress' | 'done'>('todo');
+  const [defaultStatus, setDefaultStatus] = useState<TaskStatus>('todo');
+  const [activeTask, setActiveTask] = useState<TaskItem | null>(null);
 
-  const { taskList, isLoading, deleteTask, searchTasks } = useTasks();
+  const { taskList, isLoading, deleteTask, editTask: updateTask, searchTasks } = useTasks();
 
-  const COLUMN_STATUSES = ['todo', 'in-progress', 'done'] as const;
+  const COLUMN_STATUSES: TaskStatus[] = ['todo', 'in-progress', 'done'];
 
-  const getFilteredTasks = (status: typeof COLUMN_STATUSES[number]) => {
+  // 센서 설정
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const getFilteredTasks = (status: TaskStatus) => {
     const filteredBySearch = searchQuery ? searchTasks(searchQuery) : taskList;
     return filteredBySearch.filter((task) => task.status === status);
   };
 
-  const handleAddTask = (status: typeof COLUMN_STATUSES[number]) => {
+  const handleAddTask = (status: TaskStatus) => {
     setEditTask(null);
     setDefaultStatus(status);
     setIsModalOpen(true);
@@ -144,6 +219,44 @@ function KanbanBoardContent({ onEditTask }: { onEditTask: (task: TaskItem) => vo
     }
   };
 
+  // 드래그 시작
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const task = taskList.find((t) => t.id === active.id);
+    if (task) {
+      setActiveTask(task);
+    }
+  };
+
+  // 드래그 종료, 상태 업데이트
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveTask(null);
+
+    if (!over) return;
+
+    const taskId = active.id as string;
+    const task = taskList.find((t) => t.id === taskId);
+    if (!task) return;
+
+    // over.id가 컬럼 상태인지 확인
+    let newStatus: TaskStatus | null = null;
+
+    if (COLUMN_STATUSES.includes(over.id as TaskStatus)) {
+      newStatus = over.id as TaskStatus;
+    } else {
+      // over.id가 다른 태스크의 id인 경우, 해당 태스크의 상태를 찾음
+      const overTask = taskList.find((t) => t.id === over.id);
+      if (overTask) {
+        newStatus = overTask.status;
+      }
+    }
+
+    // 상태가 변경된 경우에만 업데이트
+    if (newStatus && task.status !== newStatus) {
+      await updateTask(taskId, { status: newStatus });
+    }
+  };
 
   return (
     <div className="p-6">
@@ -176,60 +289,31 @@ function KanbanBoardContent({ onEditTask }: { onEditTask: (task: TaskItem) => vo
         </div>
       ) : (
         /* 칸반 컬럼들 */
-        <div className="flex gap-6 overflow-x-auto pb-4">
-          {COLUMN_STATUSES.map((status) => {
-            const config = COLUMN_CONFIG[status];
-            const tasks = getFilteredTasks(status);
+        <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div className="flex gap-6 overflow-x-auto pb-4">
+            {COLUMN_STATUSES.map((status) => (
+              <DroppableColumn
+                key={status}
+                status={status}
+                tasks={getFilteredTasks(status)}
+                onAddTask={handleAddTask}
+                onEditTask={handleEditTaskInternal}
+                onDeleteTask={handleDeleteTask}
+              />
+            ))}
+          </div>
 
-            return (
-              <div key={status} className="flex flex-col bg-gray-100 rounded-xl min-w-[300px] w-[300px]">
-                {/* 컬럼 헤더 */}
-                <div className="flex items-center justify-between p-4 pb-2">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: config.color }}
-                    />
-                    <h2 className="font-semibold text-gray-800">{config.title}</h2>
-                    <span className="ml-1 px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded-full font-medium">
-                      {tasks.length}
-                    </span>
-                  </div>
-                  <button className="p-1 hover:bg-gray-200 rounded">
-                    <MoreHorizontal className="w-4 h-4 text-gray-500" />
-                  </button>
-                </div>
-
-                {/* 카드 목록 */}
-                <div className="flex-1 p-2 space-y-3 overflow-y-auto max-h-[calc(100vh-350px)]">
-                  {tasks.map((task) => (
-                    <KanbanCard
-                      key={task.id}
-                      task={task}
-                      onEdit={handleEditTaskInternal}
-                      onDelete={handleDeleteTask}
-                    />
-                  ))}
-                </div>
-
-                {/* Add a task 버튼 */}
-                <div className="p-3 pt-1">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-gray-200"
-                    onClick={() => handleAddTask(status)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add a task
-                  </Button>
-                </div>
+          {/* 드래그 중인 카드 오버레이 */}
+          <DragOverlay>
+            {activeTask ? (
+              <div className="rotate-3 shadow-xl">
+                <KanbanCard task={activeTask} onEdit={() => {}} onDelete={() => {}} />
               </div>
-            );
-          })}
-        </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       )}
 
-      {/* 일정 생성 모달 */}
       <TaskCreateModal
         isOpen={isModalOpen}
         onClose={() => {
