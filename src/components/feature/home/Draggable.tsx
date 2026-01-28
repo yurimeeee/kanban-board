@@ -1,4 +1,4 @@
-import React, { type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 type DraggableProps = {
   children: ReactNode;

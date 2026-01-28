@@ -1,73 +1,33 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Filter, Plus, Search, Settings } from 'lucide-react';
 import type { ColumnStatus } from '@type/kanban';
-import type { TaskStatus } from '@type/task';
-import { getTasks, deleteTask, type TaskItem } from '@lib/taskService';
-import { useUserStore } from '@store/userSlice';
+import type { TaskItem, TaskStatus } from '@type/task';
+import { useTasks } from '@hooks/useTasks';
 import { KanbanColumn } from './KanbanColumn';
+import { TaskCreateModal } from '@components/feature/task/TaskCreateModal';
 import { Button } from '@components/ui/button';
 import { Input } from '@components/ui/input';
-import { TaskCreateModal } from '@components/feature/task/TaskCreateModal';
 
 const COLUMN_STATUSES: ColumnStatus[] = ['todo', 'in-progress', 'done'];
 
-function mapTaskStatusToColumn(status: TaskStatus): ColumnStatus {
-  if (status === 'todo') return 'todo';
-  if (status === 'in-progress') return 'in-progress';
-  if (status === 'done') return 'done';
-  return 'todo';
-}
-
 export function KanbanBoard() {
-  const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editTask, setEditTask] = useState<TaskItem | null>(null);
   const [defaultStatus, setDefaultStatus] = useState<TaskStatus>('todo');
-  const [isLoading, setIsLoading] = useState(true);
 
-  const user = useUserStore((state) => state.user);
-
-  // 데이터 불러오기
-  const fetchTasks = useCallback(async () => {
-    if (!user?.uid) {
-      setTasks([]);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const tasks = await getTasks(user.uid);
-      setTasks(tasks);
-    } catch (error) {
-      console.error('태스크 불러오기 실패:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user?.uid]);
-
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+  const { taskList, isLoading, isLoggedIn, deleteTask, searchTasks } = useTasks();
 
   // 컬럼별로 태스크 필터링
-  const getTasksByStatus = (status: ColumnStatus): TaskItem[] => {
-    return tasks.filter((task) => {
-      const taskColumn = mapTaskStatusToColumn(task.status);
-      const matchesStatus = taskColumn === status;
-      const matchesSearch = searchQuery ? task.title.toLowerCase().includes(searchQuery.toLowerCase()) || task.description.toLowerCase().includes(searchQuery.toLowerCase()) : true;
-      return matchesStatus && matchesSearch;
-    });
+  const getFilteredTasks = (status: ColumnStatus): TaskItem[] => {
+    const filteredBySearch = searchQuery ? searchTasks(searchQuery) : taskList;
+    return filteredBySearch.filter((task) => task.status === status);
   };
 
   // 태스크 추가
   const handleAddTask = (status: ColumnStatus) => {
     setEditTask(null);
-    // ColumnStatus를 TaskStatus로 변환
-    // const taskStatus: TaskStatus = status === 'review' ? 'in-progress' : (status as TaskStatus);
-    const taskStatus: TaskStatus = status as TaskStatus;
-    setDefaultStatus(taskStatus);
+    setDefaultStatus(status as TaskStatus);
     setIsModalOpen(true);
   };
 
@@ -79,13 +39,8 @@ export function KanbanBoard() {
 
   // 태스크 삭제
   const handleDeleteTask = async (taskId: string) => {
-    if (!user?.uid) return;
-
     if (confirm('정말 삭제하시겠습니까?')) {
-      const result = await deleteTask(user.uid, taskId);
-      if (result.success) {
-        fetchTasks();
-      }
+      await deleteTask(taskId);
     }
   };
 
@@ -95,12 +50,7 @@ export function KanbanBoard() {
     setEditTask(null);
   };
 
-  // 저장 성공 후
-  const handleSuccess = () => {
-    fetchTasks();
-  };
-
-  if (!user) {
+  if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-white p-6 flex items-center justify-center">
         <p className="text-gray-500">로그인이 필요합니다.</p>
@@ -159,13 +109,25 @@ export function KanbanBoard() {
         /* 칸반 컬럼들 */
         <div className="flex gap-6 overflow-x-auto pb-4">
           {COLUMN_STATUSES.map((status) => (
-            <KanbanColumn key={status} status={status} tasks={getTasksByStatus(status)} onAddTask={handleAddTask} onEditTask={handleEditTask} onDeleteTask={handleDeleteTask} />
+            <KanbanColumn
+              key={status}
+              status={status}
+              tasks={getFilteredTasks(status)}
+              onAddTask={handleAddTask}
+              onEditTask={handleEditTask}
+              onDeleteTask={handleDeleteTask}
+            />
           ))}
         </div>
       )}
 
       {/* 일정 생성/수정 모달 */}
-      <TaskCreateModal isOpen={isModalOpen} onClose={handleCloseModal} onSuccess={handleSuccess} editTask={editTask} defaultStatus={defaultStatus} />
+      <TaskCreateModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        editTask={editTask}
+        defaultStatus={defaultStatus}
+      />
     </div>
   );
 }

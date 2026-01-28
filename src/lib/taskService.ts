@@ -1,4 +1,4 @@
-import type { Priority, TaskStatus } from '@type/task';
+import type { Priority, TaskItem, TaskStatus } from '@type/task';
 import {
   Timestamp,
   addDoc,
@@ -13,22 +13,6 @@ import {
 
 import { db } from '@lib/firebase';
 import { toast } from 'sonner';
-
-export interface TaskItem {
-  id: string;
-  userId: string;
-  title: string;
-  description: string;
-  priority: Priority;
-  category: string;
-  startDate: Date | null;
-  endDate: Date | null;
-  startTime: string;
-  endTime: string;
-  status: TaskStatus;
-  createdAt: number;
-  updatedAt: number;
-}
 
 export interface CreateTodoInput {
   title: string;

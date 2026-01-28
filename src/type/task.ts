@@ -1,21 +1,17 @@
 export type Priority = 'low' | 'medium' | 'high';
 export type TaskStatus = 'todo' | 'in-progress' | 'done';
 
-export interface Todo {
+export interface TaskItem {
   id: string;
   userId: string;
   title: string;
   description: string;
   priority: Priority;
   category: string;
-
-  // 날짜 및 시간
-  startDate: Date | undefined;
-  endDate: Date | undefined;
-  startTime: string; // "09:00"
-  endTime: string;   // "18:00"
-
-  // 메타데이터
+  startDate: Date | null | undefined;
+  endDate: Date | null | undefined;
+  startTime: string;
+  endTime: string;
   status: TaskStatus;
   createdAt: number;
   updatedAt: number;

@@ -1,8 +1,8 @@
-import { Calendar, MessageSquare, MoreHorizontal, Paperclip, Pencil, Trash2 } from 'lucide-react';
+import { Calendar, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@components/ui/dropdown-menu';
 
 import { PRIORITY_CONFIG } from '@type/kanban';
-import type { TaskItem } from '@lib/taskService';
+import type { TaskItem } from '@type/task';
 import { cn } from '@lib/utils';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';

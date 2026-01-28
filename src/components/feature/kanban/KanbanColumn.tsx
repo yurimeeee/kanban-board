@@ -1,6 +1,6 @@
 import { MoreHorizontal, Plus } from 'lucide-react';
 import { COLUMN_CONFIG, type ColumnStatus } from '@type/kanban';
-import type { TaskItem } from '@lib/taskService';
+import type { TaskItem } from '@type/task';
 import { KanbanCard } from './KanbanCard';
 import { Button } from '@components/ui/button';
 

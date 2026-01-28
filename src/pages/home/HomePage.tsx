@@ -1,9 +1,9 @@
-import { KanbanBoard } from '@components/feature/kanban/KanbanBoard';
+import { TaskDashboard } from '@components/feature/dashboard/TaskDashboard';
 
 export function HomePage() {
   return (
     <div className="flex-1">
-      <KanbanBoard />
+      <TaskDashboard />
     </div>
   );
 }

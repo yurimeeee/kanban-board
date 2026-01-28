@@ -1,29 +1,27 @@
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
-import { CalendarIcon } from 'lucide-react';
-
-import { cn } from '@lib/utils';
-import { saveTask, updateTask, type TaskItem } from '@lib/taskService';
-import { useUserStore } from '@store/userSlice';
-import type { TaskStatus } from '@type/task';
-
-import { CustomModal } from '@components/ui/custom-modal';
-import { Button } from '@components/ui/button';
-import { Input } from '@components/ui/input';
-import { Label } from '@components/ui/label';
-import { Calendar } from '@components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
+import type { TaskItem, TaskStatus } from '@type/task';
+import { useEffect, useState } from 'react';
+
+import { Button } from '@components/ui/button';
+import { Calendar } from '@components/ui/calendar';
+import { CalendarIcon } from 'lucide-react';
+import { CustomModal } from '@components/ui/custom-modal';
+import { Input } from '@components/ui/input';
+import { Label } from '@components/ui/label';
+import { cn } from '@lib/utils';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { useForm } from 'react-hook-form';
+import { useTasks } from '@hooks/useTasks';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 const taskFormSchema = z.object({
   title: z.string().min(1, '제목을 입력해주세요.').max(100, '제목은 100자 이내로 입력해주세요.'),
   description: z.string().max(500, '설명은 500자 이내로 입력해주세요.').optional(),
   priority: z.enum(['low', 'medium', 'high'], {
-    required_error: '우선순위를 선택해주세요.',
+    message: '우선순위를 선택해주세요.',
   }),
   category: z.string().min(1, '카테고리를 선택해주세요.'),
   status: z.enum(['todo', 'in-progress', 'done']).optional(),
@@ -33,7 +31,7 @@ const taskFormSchema = z.object({
   endTime: z.string().optional(),
 });
 
-type TodoFormValues = z.infer<typeof taskFormSchema>;
+type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 const PRIORITY_OPTIONS = [
   { value: 'low', label: '낮음' },
@@ -55,7 +53,7 @@ const STATUS_OPTIONS = [
   { value: 'done', label: 'Done' },
 ] as const;
 
-interface TodoCreateModalProps {
+interface TaskCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
@@ -63,9 +61,9 @@ interface TodoCreateModalProps {
   defaultStatus?: TaskStatus;
 }
 
-export function TaskCreateModal({ isOpen, onClose, onSuccess, editTask, defaultStatus }: TodoCreateModalProps) {
+export function TaskCreateModal({ isOpen, onClose, onSuccess, editTask, defaultStatus }: TaskCreateModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const user = useUserStore((state) => state.user);
+  const { createTask, editTask: updateTask, isLoggedIn } = useTasks();
 
   const isEditMode = !!editTask;
 
@@ -76,7 +74,7 @@ export function TaskCreateModal({ isOpen, onClose, onSuccess, editTask, defaultS
     watch,
     reset,
     formState: { errors },
-  } = useForm<TodoFormValues>({
+  } = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
       title: '',
@@ -120,8 +118,8 @@ export function TaskCreateModal({ isOpen, onClose, onSuccess, editTask, defaultS
   const category = watch('category');
   const status = watch('status');
 
-  const onSubmit = async (values: TodoFormValues) => {
-    if (!user?.uid) {
+  const onSubmit = async (values: TaskFormValues) => {
+    if (!isLoggedIn) {
       alert('로그인이 필요합니다.');
       return;
     }
@@ -129,32 +127,24 @@ export function TaskCreateModal({ isOpen, onClose, onSuccess, editTask, defaultS
     setIsSubmitting(true);
 
     try {
+      const taskData = {
+        title: values.title,
+        description: values.description || '',
+        priority: values.priority,
+        category: values.category,
+        status: values.status,
+        startDate: values.startDate,
+        endDate: values.endDate,
+        startTime: values.startTime || '09:00',
+        endTime: values.endTime || '18:00',
+      };
+
       let result;
 
       if (isEditMode && editTask) {
-        result = await updateTask(user.uid, editTask.id, {
-          title: values.title,
-          description: values.description || '',
-          priority: values.priority,
-          category: values.category,
-          status: values.status,
-          startDate: values.startDate,
-          endDate: values.endDate,
-          startTime: values.startTime || '09:00',
-          endTime: values.endTime || '18:00',
-        });
+        result = await updateTask(editTask.id, taskData);
       } else {
-        result = await saveTask(user.uid, {
-          title: values.title,
-          description: values.description || '',
-          priority: values.priority,
-          category: values.category,
-          status: values.status,
-          startDate: values.startDate,
-          endDate: values.endDate,
-          startTime: values.startTime || '09:00',
-          endTime: values.endTime || '18:00',
-        });
+        result = await createTask(taskData);
       }
 
       if (result.success) {

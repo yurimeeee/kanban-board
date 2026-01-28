@@ -1,7 +1,6 @@
 import { DndContext } from '@dnd-kit/core';
 import { Draggable } from '@components/feature/home/Draggable';
 import { Droppable } from '@components/feature/home/Droppable';
-import React from 'react';
 import styled from '@emotion/styled';
 
 const Wrap = styled.div`

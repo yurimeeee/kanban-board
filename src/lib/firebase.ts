@@ -1,4 +1,4 @@
-import { getFirestore, initializeFirestore } from 'firebase/firestore'; // For Cloud Firestore
+import { getFirestore } from 'firebase/firestore'; // For Cloud Firestore
 
 import { getAuth } from 'firebase/auth';
 import { initializeApp } from 'firebase/app';
