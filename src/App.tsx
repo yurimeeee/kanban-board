@@ -1,25 +1,27 @@
-// src/App.tsx
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
-// import { AboutPage } from '@/pages/AboutPage';
+import { AboutPage } from '@pages/about/AboutPage';
 import { AppLayout } from '@components/layout/AppLayout';
 import { HomePage } from '@pages/home/HomePage';
-
-// import { HomePage } from '@/pages/HomePage';
+import MyPage from '@pages/my-page/MyPage';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <AppLayout />, // 부모 레이아웃
+    element: <AppLayout />,
     children: [
       {
-        path: '', // "/" 경로일 때
+        path: '',
         element: <HomePage />,
       },
-      // {
-      //   path: 'about', // "/about" 경로일 때
-      //   element: <AboutPage />,
-      // },
+      {
+        path: 'about',
+        element: <AboutPage />,
+      },
+      {
+        path: 'mypage',
+        element: <MyPage />,
+      },
     ],
   },
 ]);

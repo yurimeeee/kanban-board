@@ -1,6 +1,6 @@
-import { getFirestore } from 'firebase/firestore'; // For Cloud Firestore
-
 import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore'; // For Cloud Firestore
+import { getStorage } from 'firebase/storage';
 import { initializeApp } from 'firebase/app';
 
 const firebaseConfig = {
@@ -23,6 +23,8 @@ export const auth = getAuth(app);
 
 // Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app, "kanban-board");
+
+export const storage = getStorage(app);
 
 export default app;
 
